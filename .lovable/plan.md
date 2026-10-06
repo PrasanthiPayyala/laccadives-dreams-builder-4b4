@@ -138,57 +138,78 @@ src/
 Public and admin share primitives and tokens but not page shells. Public routes remain directly shareable and SEO-aware. Admin routes live under an `/admin` layout, with access control intentionally deferred. Add folders as needed rather than creating empty placeholders for the whole blueprint at once.
 
 ## 3. Public website route architecture
-Use TanStack Router file routes: static path segments map to route filenames; `$slug` is a dynamic parameter. A listing route is an index leaf under its collection; detail pages load by slug. Route loaders should obtain data through the repository/query boundary. Each public leaf owns distinct title, description, Open Graph metadata, and self-canonical; dynamic metadata comes from its content record. Missing or unpublished records resolve to an intentional not-found/noindex state.
+Use TanStack Router file routes: static path segments map to route filenames; `$slug` is a dynamic parameter. A collection route is an index leaf; detail routes load by slug. Route loaders obtain data through repository/query boundaries. Each public leaf owns distinct title, description, Open Graph metadata, and self-canonical. Dynamic metadata comes from its content record. Missing/unpublished records resolve to an intentional not-found/noindex state. Search and filters use validated URL search parameters.
 
-| Route | Purpose and data | Main sections / reusable UI | SEO and behavior |
+| Route / TanStack route-file shape | Purpose and page sections | Components / content required | CMS dependency and SEO | Responsive requirements |
+|---|---|---|---|---|
+| `/` (`index.tsx`) | Brand entry; ordered hero, explore, featured content, editorial, gallery/video, trust, travel information, newsletter and CTA bands | SiteHeader/Footer, Hero, block renderers, ContentGrid, cards, Gallery, forms; settings, homepage blocks, related record references | Global settings + published homepage blocks; unique home metadata and Organization schema only where facts are verified | Image composition art-directed for phone; section order remains clear; grids collapse without cropping key subjects |
+| `/about` (`about.tsx`) | Brand story, local context, values and approved team/partner proof | Hero/editorial feature, RichContent, stats only if sourced, CTA; approved About Page content and settings | Managed page content; unique static metadata and accurate Organization facts | Editorial columns stack in reading order; narrative measure stays comfortable |
+| `/contact` (`contact.tsx`) | Contact paths, contact form and travel-planning next step | ContactForm, contact details, optional map link, FAQ links; settings, consent copy, form schema | Settings and form configuration; unique metadata; no invented contact details | Single-column form, large controls, map remains optional and has text fallback |
+| `/search` (`search.tsx`) | Cross-type content search, type filters, result and no-result states | SearchOverlay/field, result cards, pagination/empty state; query and indexed published records | Search/index service later; query remains shareable; normally `noindex,follow` to avoid thin pages | Filters move into compact disclosure; result types remain clear; no horizontal overflow |
+| `/faq` (`faq.tsx`) | General questions grouped by topic | FAQAccordion, topic navigation, GlobalCTA; visible published FAQ records | CMS FAQ records and explicit relations; unique metadata; FAQ schema only for visible genuine Q&A | Accordion content readable, touch targets adequate, long answers wrap naturally |
+| `/privacy-policy` (`privacy-policy.tsx`) | Privacy notice | RichContent/legal typography, updated date; approved legal text | Managed legal page; unique metadata and canonical; legal review required | Single reading column, headings and lists reflow cleanly |
+| `/terms` (`terms.tsx`) | Terms of use/service | RichContent/legal typography, updated date; approved legal text | Managed legal page; unique metadata and canonical; legal review required | Long-form single column, legible line length and in-page links if useful |
+| `/cookie-policy` (`cookie-policy.tsx`) | Cookie policy and future preference entry point | RichContent, optional preferences link; approved legal text | Managed legal page; unique metadata; consent behavior requires separate approved service | Reading column; any preferences control remains usable on small screens |
+| `/destinations` (`destinations.index.tsx`) | Browse islands/destinations | Listing intro, filters, DestinationCard grid, pagination, CTA; published destination records and category/location facets | CMS destination records; indexable metadata, filter query policy, canonical listing URL | Grid steps down by width; filters become drawer/disclosure on phone |
+| `/destinations/$slug` (`destinations.$slug.tsx`) | One destination detail page | Breadcrumbs, Hero, gallery/map, overview, arrival/season, things to do/stay/food/culture/tips, FAQs and related content; one destination and linked records | Dynamic metadata/canonical, TouristDestination only for supported facts, BreadcrumbList; published record required | Hero focal point set for phone; long sections stack; map has a text/link fallback |
+| `/experiences` (`experiences.index.tsx`) | Browse experience categories and activities | Category filters, ExperienceCard grid, seasonal prompt; published experiences and category records | CMS experience/category records; listing metadata; validated query filters | Cards/grid collapse; filter panel becomes mobile drawer or disclosure |
+| `/experiences/$slug` (`experiences.$slug.tsx`) | Experience detail | Hero, highlights, duration/difficulty/suitability, requirements, inclusions, gallery, FAQs, enquiry CTA, related destinations/packages | Dynamic metadata/canonical, breadcrumb; category and relation IDs resolved through repositories | Details become readable stacked groups; enquiry CTA remains reachable without obscuring content |
+| `/packages` (`packages.index.tsx`) | Browse published trip packages | Listing intro, duration/destination filters, PackageCard grid, CTA; published package records | CMS package records; only eligible public statuses; listing metadata and URL-backed filters | Filter controls collapse; card facts and price qualifier wrap cleanly |
+| `/packages/$slug` (`packages.$slug.tsx`) | Package itinerary and enquiry page | Hero/summary, day-by-day itinerary, destinations, inclusions/exclusions/requirements/terms, FAQs, EnquiryForm | Dynamic metadata; price/offer structured data only when authoritative and current | Itinerary uses expandable but accessible day sections; form fields stack |
+| `/blog` (`blog.index.tsx`) | Blog/editorial discovery | Featured story, category/tag filters, ArticleCard grid, pagination | Published blog records; index metadata, canonical/filter policy | Featured story stacks on narrow screens; card grid responds without tiny columns |
+| `/blog/$slug` (`blog.$slug.tsx`) | Blog story | Breadcrumbs, article header/byline, RichContent, gallery, related content, share links | Dynamic title/description/canonical/social media; Article/BlogPosting from rendered fields | Narrow reading column; images/captions and tables adapt to mobile |
+| `/travel-guides` (`travel-guides.index.tsx`) | Practical guide library | Topic filters, guide cards, pagination | Published guide records and categories; unique index metadata | Filters collapse; cards maintain legibility and image ratios |
+| `/travel-guides/$slug` (`travel-guides.$slug.tsx`) | In-depth guide | Header, optional contents list, RichContent, practical callouts, linked destinations/experiences | Dynamic metadata/canonical; Article schema only where appropriate | Contents panel becomes in-page disclosure; reading measure stays narrow |
+| `/news` (`news.index.tsx`) | Dated news index | News list/grid, category filter, pagination | Published news ordered by authoritative publish date; index metadata | Compact list becomes stacked rows/cards; date never conveys state by color alone |
+| `/news/$slug` (`news.$slug.tsx`) | News story | Header, publication date/byline, body, media, related links | Dynamic metadata/canonical; Article schema with valid dates | Long content reflows; media and related links fit single column |
+| `/campaigns/$slug` (`campaigns.$slug.tsx`) | Managed campaign landing page | Configured ordered block list, campaign-specific forms/CTA | Published campaign and blocks; per-campaign metadata, canonical and index policy; UTM-ready links | Campaign blocks use same responsive renderers; form and CTA remain reachable on phones |
+
+Page data may ultimately be controlled from CMS records, while public rendering remains independent of editor screens. Shareable routes use separate paths rather than hash fragments. Route loaders expose loading/error/not-found behavior, and presentation components never fetch fixture arrays or hardcode API endpoints.
+
+## 4. Admin/CMS route architecture and information architecture
+These are planned frontend routes only. No login, access enforcement, backend reads/writes, or persistence is part of this phase. Use `admin.tsx` as the `/admin` shell/layout with an `<Outlet />`; use the index child for the dashboard. In TanStack file naming, dots denote nested URL segments and `$id` is a dynamic parameter; for example, `admin.destinations.$id.tsx` maps to `/admin/destinations/$id`. Never edit the generated route tree. Resource `$id` is an internal stable identifier; the public site uses `$slug`.
+
+### Complete planned route map
+
+| Navigation group | Planned routes | Purpose / primary screens | Shared UI and future data source |
 |---|---|---|---|
-| `/` | Brand introduction; global settings, ordered homepage blocks, selected content | Hero, featured destinations/experiences/packages, editorial, gallery/video, trust, travel info, newsletter, CTA | Static path, data-driven sections; unique home metadata; Organization schema where accurate |
-| `/destinations` | Browse destinations; records, filters, facets | Intro, filters, destination grid, pagination, enquiry CTA | Indexable listing; title/description; query-string filters are shareable |
-| `/destinations/$slug` | One destination; detail record, related content and FAQs | Breadcrumbs, hero, overview, gallery/map, travel info, things to do, stay/food/culture, FAQs, related experiences/packages/articles | Dynamic title/description/canonical; TouristDestination only for supported facts; breadcrumb schema |
-| `/experiences` | Browse activity/interest catalog | Intro, category filters, experience grid, seasonal prompt | Indexable listing; query-driven filters/search |
-| `/experiences/$slug` | Experience detail; destinations/packages relations | Hero, highlights, duration/difficulty/suitability, requirements, inclusions, gallery, FAQs, enquiry CTA, related records | Dynamic metadata and canonical; valid breadcrumb schema |
-| `/packages` | Browse trip/package offers; statuses and public availability | Listing intro, filters, package grid, comparison cues, enquiry CTA | Only published/eligible packages public; filter state in URL |
-| `/packages/$slug` | Package detail; itinerary days, destination/experience links, terms | Hero, summary, day-by-day itinerary, inclusions/exclusions, requirements, FAQs, enquiry form | Dynamic metadata; offers/pricing markup only if accurate and maintained |
-| `/blog` | Editorial index; posts, categories, tags | Featured story, filters, article grid, pagination | Indexable; listing metadata; canonicalized query policy |
-| `/blog/$slug` | Blog story and author/related content | Breadcrumbs, article header, rich body, gallery, related content, share actions | Article/BlogPosting JSON-LD from visible content; canonical and social image |
-| `/travel-guides` | Practical travel-guide library | Intro, topic filters, guide grid, pagination | Indexable topic listing; query filters shareable |
-| `/travel-guides/$slug` | One guide; linked destinations/experiences | Guide header, contents, rich body, practical callouts, related content | Dynamic metadata, Article schema only when fitting the actual content |
-| `/news` | News index ordered by published date | News list/grid, category filter, pagination | Indexable listing; current records only |
-| `/news/$slug` | One news article | Header, body, related links, date/byline | Dynamic metadata, Article schema, accurate dates |
-| `/about` | Brand, local context, service promise | Editorial narrative, values, team/partners if approved, trust CTA | Static route metadata; Organization data consistent with real business facts |
-| `/contact` | Contact choices and public enquiry entry point | Contact details from settings, map/link, contact form, FAQ links | Static metadata; form state accessible; no invented contact facts |
-| `/search` | Cross-type search results | Search field, type filters, results by content kind, empty state | Search query in URL; normally noindex to avoid thin result pages |
-| `/faq` | General FAQ | Topic grouping, accessible accordions, contact CTA | FAQ schema only for visible, genuine question/answer content; no duplicate hidden FAQs |
-| `/campaigns/$slug` | CMS-managed campaign landing page | Campaign-specific blocks, tracking-ready CTAs/forms | Per-campaign metadata/index policy; dynamic, published records only |
-| `/privacy-policy` | Legal privacy notice | Structured legal content, updated date | Static/legal metadata; content must be legally reviewed |
-| `/terms` | Terms of use/service | Structured legal content, updated date | Static/legal metadata; content must be legally reviewed |
-| `/cookie-policy` | Cookie notice/preferences explanation | Structured legal content and preferences entry point if later supported | Static/legal metadata; consent behavior requires a separate approved integration |
+| Dashboard | `/admin` | Content/lead overview, pending review, recent activity and shortcuts | Dashboard tiles, date/filter controls, activity list; aggregated CMS and enquiry API |
+| Website | `/admin/homepage`, `/admin/pages`, `/admin/pages/$id`, `/admin/header`, `/admin/footer`, `/admin/menus`, `/admin/settings` | Homepage section configuration, page inventory/edit, shared header/footer/menu, central site settings | Page/block editor, settings forms, preview; Page, HomepageBlock, Menu, WebsiteSettings repositories |
+| Explore | `/admin/destinations`, `/admin/destinations/new`, `/admin/destinations/$id`, `/admin/experiences`, `/admin/experiences/new`, `/admin/experiences/$id`, `/admin/packages`, `/admin/packages/new`, `/admin/packages/$id`, `/admin/categories` | Manage destination, experience, package, and shared category records | Filterable tables, editors, relationship pickers, itinerary editor; domain repositories |
+| Content | `/admin/blog`, `/admin/blog/new`, `/admin/blog/$id`, `/admin/articles`, `/admin/articles/new`, `/admin/articles/$id`, `/admin/travel-guides`, `/admin/travel-guides/new`, `/admin/travel-guides/$id`, `/admin/news`, `/admin/news/new`, `/admin/news/$id`, `/admin/faqs`, `/admin/faqs/new`, `/admin/faqs/$id`, `/admin/testimonials`, `/admin/testimonials/new`, `/admin/testimonials/$id` | Editorial lists/editors, FAQ records and testimonials | Shared editorial editor, rich content field, relation/media/SEO panels; content repositories |
+| Media | `/admin/media`, `/admin/galleries`, `/admin/galleries/new`, `/admin/galleries/$id`, `/admin/videos`, `/admin/videos/new`, `/admin/videos/$id` | Library search/filter, gallery ordering, video metadata | Media grid/table, MediaPicker, metadata panel; future MediaAsset/Gallery API |
+| Marketing | `/admin/newsletter`, `/admin/subscribers`, `/admin/announcements`, `/admin/announcements/new`, `/admin/announcements/$id`, `/admin/popups`, `/admin/popups/new`, `/admin/popups/$id`, `/admin/campaigns`, `/admin/campaigns/new`, `/admin/campaigns/$id` | Newsletter configuration/subscriber presentation, campaigns, notices and popup scheduling | Campaign/page editor, audience/date controls, consent indicators; future marketing service |
+| Leads | `/admin/enquiries`, `/admin/enquiries/$id`, `/admin/package-enquiries`, `/admin/contact-enquiries` | Unified inbox, enquiry detail/activity, type-filtered package/contact views | Search/filter table, status and assignment controls, detail timeline; Enquiry repository |
+| SEO | `/admin/seo`, `/admin/seo/metadata`, `/admin/redirects`, `/admin/redirects/new`, `/admin/redirects/$id`, `/admin/seo/sitemap` | Global SEO defaults, per-content metadata, redirects, sitemap health/configuration view | SEO panel, redirect table/form, validation preview; future published content/redirect service |
+| System | `/admin/users`, `/admin/roles`, `/admin/permissions`, `/admin/audit-logs`, `/admin/integrations` | Future account/role concepts, audit trail, integration configuration | Access-aware tables, permission matrix, audit filters; future identity, authorization and audit services |
 
-Shareable routes use separate paths, not hash fragments as substitutes. Search and listing filters use validated search params. Editorial and detail pages have explicit loading, empty/not-found, and error handling. Route shells should not fetch directly from fixtures or hardcode endpoint details.
+`new` paths represent create screens; `$id` paths represent edit/detail screens. For a compact build, a list may link to the same editor pattern for new/edit, but each URL remains explicit and predictable. The role and integration screens are informational frontend concepts only until a trusted backend exists.
 
-## 4. Admin/CMS route architecture
-These are planned frontend URLs only. No login, access enforcement, backend reads/writes, or actual persistence is part of this phase. The `/admin` parent supplies the admin shell and renders its outlet; the index child is `/admin`. Keep route components as page assembly and move reusable controls into admin/domain modules.
+### Sidebar hierarchy and screen intent
 
-| Route(s) | Planned purpose |
-|---|---|
-| `/admin`, `/admin/settings` | Overview and centralized website settings |
-| `/admin/homepage`, `/admin/pages`, `/admin/pages/$id` | Homepage sections, page index, page content/editor view |
-| `/admin/header`, `/admin/footer`, `/admin/menus` | Shared chrome and navigation configuration |
-| `/admin/destinations`, `/admin/destinations/new`, `/admin/destinations/$id` | List/create/edit destination records |
-| `/admin/experiences`, `/admin/experiences/new`, `/admin/experiences/$id` | List/create/edit experiences and relations |
-| `/admin/packages`, `/admin/packages/new`, `/admin/packages/$id` | Package list, creation, itinerary/editor details |
-| `/admin/blog`, `/admin/blog/new`, `/admin/blog/$id` | Blog list and create/edit workflow |
-| `/admin/articles`, `/admin/travel-guides`, `/admin/news` | Editorial collections, with shared list/editor patterns |
-| `/admin/faqs`, `/admin/testimonials` | Reusable FAQ and testimonial management |
-| `/admin/media`, `/admin/galleries`, `/admin/videos` | Asset library, gallery composition, video records |
-| `/admin/newsletter`, `/admin/subscribers` | Newsletter configuration and subscriber list presentation |
-| `/admin/enquiries`, `/admin/enquiries/$id` | Lead inbox, filters, enquiry detail and status history |
-| `/admin/seo`, `/admin/redirects` | SEO defaults, per-content metadata, redirect records |
-| `/admin/announcements`, `/admin/popups`, `/admin/campaigns` | Marketing content and campaign setup |
-| `/admin/users`, `/admin/roles`, `/admin/permissions` | Future identity/role UI concepts; not secure or active in frontend-only phase |
-| `/admin/audit-logs`, `/admin/integrations` | Future audit and integration configuration views |
+```text
+Dashboard
+Website
+  Homepage · Pages · Header · Footer · Menus · Website Settings
+Explore
+  Destinations · Experiences · Packages · Categories
+Content
+  Blogs · Articles · Travel Guides · News · FAQs · Testimonials
+Media
+  Media Library · Galleries · Videos
+Marketing
+  Newsletter · Subscribers · Announcements · Popups · Campaigns
+Leads
+  Enquiries · Package Enquiries · Contact Enquiries
+SEO
+  SEO Settings · Redirects · Sitemap
+System
+  Users · Roles · Permissions · Audit Logs · Integrations
+```
 
-For routes that manage a resource, keep list, create, and edit responsibilities explicit. A resource editor can group fields into Details, Media, Relationships, SEO, and Workflow. The stable `$id` is an internal record identifier; the public site uses the record's `$slug`. If permissions later differ by operation, enforce them in the trusted service as well as reflecting them in the UI.
+Dashboard surfaces work status, not decorative analytics. Website controls the CMS-managed public shell and pages. Explore manages related destination/experience/package records. Content manages editorial and reusable FAQ/testimonial records. Media is centralized and selected by asset reference. Marketing owns campaign/announcement/subscriber configuration. Leads supports triage and contact history. SEO controls metadata and redirect records; sitemap status is derived from eligible content later. System screens anticipate secure identity and audit services. Shared data source in the frontend phase is fixture-backed repositories; every group gets the same loading/empty/error patterns and later swaps to a typed API adapter.
+
+Admin UI should have a compact, searchable sidebar with active-route state and clear group hierarchy. On mobile it becomes a focus-managed navigation drawer. Do not show role-based hiding as a security boundary; future API operations must verify permissions.
 
 ## 5. Design system
 **Direction:** Laccadives editorial luxury—documentary ocean imagery, confident typography, generous rhythm, restrained controls, and a distinct coral/reef accent. Avoid the generic resort-template treatment and generic SaaS admin dashboard. The public side should feel immersive and calm; the admin side should feel precise and operational while sharing brand tokens.
