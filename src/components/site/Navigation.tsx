@@ -30,7 +30,7 @@ export function MobileNavigation({ menu, settings }: { menu: Menu; settings: Web
       <nav aria-label="Mobile navigation" className="mt-8"><ul className="divide-y divide-border">
         {menu.items.map(item => <li key={item.id}>{item.available ? <SheetClose asChild><Link to="/" className="flex min-h-12 items-center py-2 text-lg">{item.label}</Link></SheetClose> : <NavigationItem item={item} mobile />}</li>)}
       </ul></nav>
-      <SheetClose asChild><GlobalCTA {...settings.primaryCTA} className="mt-8 w-full" /></SheetClose>
+      <GlobalCTA {...settings.primaryCTA} onClick={() => setOpen(false)} className="mt-8 w-full" />
     </SheetContent>
   </Sheet>;
 }
