@@ -1,24 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { siteRepository } from "@/repositories/site";
+import { SiteHeader } from "@/components/site/SiteHeader";
+import { SiteFooter } from "@/components/site/SiteFooter";
+import { HomepageFoundation } from "@/features/homepage/components/HomepageFoundation";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  loader: () => siteRepository.getPublicFoundation(),
+  head: ({ loaderData }) => {
+    const seo = loaderData?.homepage.seo ?? siteRepository.getPublicFoundation().homepage.seo;
+    return {
+      meta: [
+        { title: seo.title }, { name: "description", content: seo.description },
+        { property: "og:title", content: seo.title }, { property: "og:description", content: seo.description },
+        { property: "og:type", content: "website" }, { property: "og:url", content: seo.canonical },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      links: [{ rel: "canonical", href: seo.canonical }],
+    };
+  },
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
+  const { settings, menu, homepage } = Route.useLoaderData();
+  return <><SiteHeader settings={settings} menu={menu} /><main id="main-content" tabIndex={-1}><HomepageFoundation data={homepage} /></main><SiteFooter settings={settings} /></>;
 }
