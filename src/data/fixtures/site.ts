@@ -5,8 +5,9 @@ import type { PublicFoundation, MenuItem } from "@/contracts/site";
 
 const menuItems: MenuItem[] = [
   { id: "home", label: "Home", plannedPath: "/", available: true, destination: { kind: "route", to: "/" } },
+  { id: "destinations", label: "Destinations", plannedPath: "/destinations", available: true, destination: { kind: "route", to: "/destinations" } },
   ...([
-    ["destinations", "Destinations", "/destinations"], ["experiences", "Experiences", "/experiences"],
+    ["experiences", "Experiences", "/experiences"],
     ["packages", "Packages", "/packages"], ["journal", "Journal", "/blog"],
     ["guides", "Travel Guides", "/travel-guides"], ["about", "About", "/about"], ["contact", "Contact", "/contact"],
   ] as [string, string, string][]).map(([id, label, plannedPath]) => ({ id, label, plannedPath, available: false })),

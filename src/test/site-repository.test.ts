@@ -12,7 +12,7 @@ describe("M1 public repository", () => {
   it("exposes only implemented destinations and exactly one sample section", () => {
     const data = siteRepository.getPublicFoundation();
     expect(data.menu.items).toHaveLength(8);
-    expect(data.menu.items.filter(item => item.available).map(item => item.plannedPath)).toEqual(["/"]);
+    expect(data.menu.items.filter(item => item.available).map(item => item.plannedPath)).toEqual(["/", "/destinations"]);
     expect(data.menu.items.filter(item => !item.available).every(item => !item.destination)).toBe(true);
     expect(data.homepage.representative.items).toHaveLength(2);
     expect(data.settings.footer.contact.every(item => item.value === "Not yet provided")).toBe(true);

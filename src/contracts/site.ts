@@ -7,7 +7,7 @@ export interface MediaAsset {
   focalPoint: "center" | "island";
 }
 
-export type Destination = { kind: "route"; to: "/" } | { kind: "section"; id: "introduction" | "island-stories" };
+export type Destination = { kind: "route"; to: "/" | "/destinations" } | { kind: "section"; id: "introduction" | "island-stories" };
 export interface CTA { label: string; destination: Destination; variant: "primary" | "secondary" | "quiet" }
 export interface MenuItem { id: string; label: string; plannedPath: string; destination?: Destination; available: boolean }
 export interface Menu { id: string; label: string; items: MenuItem[] }
