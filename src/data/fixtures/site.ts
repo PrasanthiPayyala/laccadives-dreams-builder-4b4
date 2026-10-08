@@ -21,7 +21,7 @@ export const publicFoundationFixture: PublicFoundation = {
       description: "A little closer to the ocean. A little further from the everyday.",
       groups: [
         { id: "explore", label: "Explore", items: menuItems.slice(1, 6) },
-        { id: "discover", label: "Discover", items: [menuItems[0], ...menuItems.slice(6)] },
+        { id: "discover", label: "Discover", items: [menuItems[0]!, ...menuItems.slice(6)] },
       ],
       contact: [{ label: "Email", value: "Not yet provided" }, { label: "Phone", value: "Not yet provided" }],
       socials: [{ label: "Instagram", available: false }, { label: "Facebook", available: false }],
