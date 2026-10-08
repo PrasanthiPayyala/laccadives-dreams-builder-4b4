@@ -11,7 +11,10 @@ export function NavigationItem({ item, mobile = false }: { item: MenuItem; mobil
   if (!item.available || !item.destination) return <span className={`${classes} text-muted-foreground`} aria-disabled="true" title={`${item.label} — coming soon`}>
     {item.label}{mobile && <span className="text-xs font-sans">Coming soon</span>}
   </span>;
-  return <Link to="/" {...(item.destination.kind === "section" ? { hash: item.destination.id } : {})} activeOptions={{ exact: true }} className={`${classes} text-foreground hover:text-primary`}>{item.label}</Link>;
+  const d = item.destination;
+  const linkClass = `${classes} text-foreground hover:text-primary`;
+  if (d.kind === "section") return <Link to="/" hash={d.id} className={linkClass}>{item.label}</Link>;
+  return <Link to={d.to} activeOptions={{ exact: d.to === "/" }} activeProps={{ className: "text-primary" }} className={linkClass}>{item.label}</Link>;
 }
 
 export function DesktopNavigation({ menu }: { menu: Menu }) {
@@ -28,7 +31,7 @@ export function MobileNavigation({ menu, settings }: { menu: Menu; settings: Web
       <SheetTitle className="font-display text-3xl">Experience Laccadives</SheetTitle>
       <SheetDescription className="mt-2">{settings.logoSubtitle}</SheetDescription>
       <nav aria-label="Mobile navigation" className="mt-8"><ul className="divide-y divide-border">
-        {menu.items.map(item => <li key={item.id}>{item.available ? <SheetClose asChild><Link to="/" className="flex min-h-12 items-center py-2 text-lg">{item.label}</Link></SheetClose> : <NavigationItem item={item} mobile />}</li>)}
+        {menu.items.map(item => <li key={item.id}>{item.available ? <SheetClose asChild><span><NavigationItem item={item} mobile /></span></SheetClose> : <NavigationItem item={item} mobile />}</li>)}
       </ul></nav>
       <GlobalCTA {...settings.primaryCTA} onClick={() => setOpen(false)} className="mt-8 w-full" />
     </SheetContent>
