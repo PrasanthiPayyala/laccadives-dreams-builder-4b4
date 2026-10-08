@@ -5,11 +5,11 @@ import type { PublicFoundation, MenuItem } from "@/contracts/site";
 
 const menuItems: MenuItem[] = [
   { id: "home", label: "Home", plannedPath: "/", available: true, destination: { kind: "route", to: "/" } },
-  ...[
+  ...([
     ["destinations", "Destinations", "/destinations"], ["experiences", "Experiences", "/experiences"],
     ["packages", "Packages", "/packages"], ["journal", "Journal", "/blog"],
     ["guides", "Travel Guides", "/travel-guides"], ["about", "About", "/about"], ["contact", "Contact", "/contact"],
-  ].map(([id, label, plannedPath]) => ({ id, label, plannedPath, available: false })),
+  ] as [string, string, string][]).map(([id, label, plannedPath]) => ({ id, label, plannedPath, available: false })),
 ];
 
 // Editorial sample copy and generated illustrative media; not verified destination or company records.
@@ -21,7 +21,7 @@ export const publicFoundationFixture: PublicFoundation = {
       description: "A little closer to the ocean. A little further from the everyday.",
       groups: [
         { id: "explore", label: "Explore", items: menuItems.slice(1, 6) },
-        { id: "discover", label: "Discover", items: [menuItems[0], ...menuItems.slice(6)] },
+        { id: "discover", label: "Discover", items: [menuItems[0]!, ...menuItems.slice(6)] },
       ],
       contact: [{ label: "Email", value: "Not yet provided" }, { label: "Phone", value: "Not yet provided" }],
       socials: [{ label: "Instagram", available: false }, { label: "Facebook", available: false }],

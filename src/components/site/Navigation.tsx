@@ -11,7 +11,7 @@ export function NavigationItem({ item, mobile = false }: { item: MenuItem; mobil
   if (!item.available || !item.destination) return <span className={`${classes} text-muted-foreground`} aria-disabled="true" title={`${item.label} — coming soon`}>
     {item.label}{mobile && <span className="text-xs font-sans">Coming soon</span>}
   </span>;
-  return <Link to="/" hash={item.destination.kind === "section" ? item.destination.id : undefined} activeOptions={{ exact: true }} className={`${classes} text-foreground hover:text-primary`}>{item.label}</Link>;
+  return <Link to="/" {...(item.destination.kind === "section" ? { hash: item.destination.id } : {})} activeOptions={{ exact: true }} className={`${classes} text-foreground hover:text-primary`}>{item.label}</Link>;
 }
 
 export function DesktopNavigation({ menu }: { menu: Menu }) {
