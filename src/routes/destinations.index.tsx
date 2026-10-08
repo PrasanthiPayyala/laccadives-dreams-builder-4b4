@@ -8,12 +8,12 @@ import type { IslandType } from "@/contracts/destinations";
 
 const types = Object.keys(islandTypeLabel) as IslandType[];
 
-interface Search { type?: IslandType; interest?: string }
+interface Search { type?: IslandType | undefined; interest?: string | undefined }
 
 export const Route = createFileRoute("/destinations/")({
   validateSearch: (s: Record<string, unknown>): Search => ({
-    ...(types.includes(s.type as IslandType) ? { type: s.type as IslandType } : {}),
-    ...(typeof s.interest === "string" && s.interest ? { interest: s.interest } : {}),
+    ...(types.includes(s["type"] as IslandType) ? { type: s["type"] as IslandType } : {}),
+    ...(typeof s["interest"] === "string" && s["interest"] ? { interest: s["interest"] } : {}),
   }),
   loaderDeps: ({ search }) => search,
   loader: ({ deps }) => ({
