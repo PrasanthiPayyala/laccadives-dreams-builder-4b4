@@ -5,11 +5,11 @@ import type { PublicFoundation, MenuItem } from "@/contracts/site";
 
 const menuItems: MenuItem[] = [
   { id: "home", label: "Home", plannedPath: "/", available: true, destination: { kind: "route", to: "/" } },
-  ...[
+  ...([
     ["destinations", "Destinations", "/destinations"], ["experiences", "Experiences", "/experiences"],
     ["packages", "Packages", "/packages"], ["journal", "Journal", "/blog"],
     ["guides", "Travel Guides", "/travel-guides"], ["about", "About", "/about"], ["contact", "Contact", "/contact"],
-  ].map(([id, label, plannedPath]) => ({ id, label, plannedPath, available: false })),
+  ] as [string, string, string][]).map(([id, label, plannedPath]) => ({ id, label, plannedPath, available: false })),
 ];
 
 // Editorial sample copy and generated illustrative media; not verified destination or company records.
